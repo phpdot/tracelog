@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace PHPdot\TraceLog\Trace;
 
-use InvalidArgumentException;
+use PHPdot\TraceLog\Exception\InvalidIdentifierException;
 
 final class Traceparent
 {
@@ -22,7 +22,7 @@ final class Traceparent
      * Create a new Traceparent instance.
      *
      * @param string $traceId The trace identifier (32 hex chars or UUID format)
-     * @param string $spanId The span identifier (base62)
+     * @param string $spanId The span identifier (16 hex characters)
      */
     public function __construct(
         private readonly string $traceId,
@@ -35,7 +35,7 @@ final class Traceparent
      * @param string $header The traceparent header value (e.g. "00-{trace_id}-{span_id}-01")
      *
      *
-     * @throws InvalidArgumentException If the header format is invalid
+     * @throws InvalidIdentifierException If the header format is invalid
      * @return self New Traceparent instance
      */
     public static function fromHeader(string $header): self
@@ -43,7 +43,7 @@ final class Traceparent
         $parts = explode('-', $header);
 
         if (count($parts) !== 4) {
-            throw new InvalidArgumentException('Invalid traceparent header format');
+            throw InvalidIdentifierException::traceparent($header);
         }
 
         $hexTraceId = $parts[1];

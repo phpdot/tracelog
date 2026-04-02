@@ -14,7 +14,7 @@ declare(strict_types=1);
 
 namespace PHPdot\TraceLog\Encryption;
 
-use RuntimeException;
+use PHPdot\TraceLog\Exception\EncryptionException;
 
 final class ChaChaEncryptor implements EncryptorInterface
 {
@@ -30,14 +30,14 @@ final class ChaChaEncryptor implements EncryptorInterface
      *
      * @param string $key Base64-encoded 256-bit (32-byte) encryption key
      *
-     * @throws RuntimeException If the key is invalid
+     * @throws EncryptionException If the key is invalid
      */
     public function __construct(string $key)
     {
         $decoded = base64_decode($key, true);
 
         if ($decoded === false || strlen($decoded) !== self::KEY_LEN) {
-            throw new RuntimeException('Encryption key must be a base64-encoded 256-bit (32 bytes) key');
+            throw EncryptionException::invalidKey();
         }
 
         $this->key = $decoded;
@@ -59,7 +59,7 @@ final class ChaChaEncryptor implements EncryptorInterface
      * @param string $plaintext The plaintext to encrypt
      *
      *
-     * @throws RuntimeException If compression or encryption fails
+     * @throws EncryptionException If compression or encryption fails
      * @return string Base64-encoded ciphertext
      */
     public function encrypt(string $plaintext): string
@@ -67,7 +67,7 @@ final class ChaChaEncryptor implements EncryptorInterface
         $compressed = gzcompress($plaintext, 9);
 
         if ($compressed === false) {
-            throw new RuntimeException('Compression failed');
+            throw EncryptionException::compressionFailed();
         }
 
         $nonce = random_bytes(self::NONCE_LEN);
@@ -85,7 +85,7 @@ final class ChaChaEncryptor implements EncryptorInterface
         );
 
         if ($ciphertext === false) {
-            throw new RuntimeException('Encryption failed');
+            throw EncryptionException::encryptionFailed();
         }
 
         return base64_encode($nonce . $tag . $ciphertext);
@@ -97,7 +97,7 @@ final class ChaChaEncryptor implements EncryptorInterface
      * @param string $ciphertext Base64-encoded ciphertext
      *
      *
-     * @throws RuntimeException If decoding, decryption, or decompression fails
+     * @throws EncryptionException If decoding, decryption, or decompression fails
      * @return string The decrypted plaintext
      */
     public function decrypt(string $ciphertext): string
@@ -107,7 +107,7 @@ final class ChaChaEncryptor implements EncryptorInterface
         $minLength = self::NONCE_LEN + self::TAG_LEN;
 
         if ($payload === false || strlen($payload) < $minLength) {
-            throw new RuntimeException('Invalid payload');
+            throw EncryptionException::invalidPayload();
         }
 
         $nonce      = substr($payload, 0, self::NONCE_LEN);
@@ -124,13 +124,13 @@ final class ChaChaEncryptor implements EncryptorInterface
         );
 
         if ($compressed === false) {
-            throw new RuntimeException('Decryption failed');
+            throw EncryptionException::decryptionFailed();
         }
 
         $message = gzuncompress($compressed);
 
         if ($message === false) {
-            throw new RuntimeException('Decompression failed');
+            throw EncryptionException::decompressionFailed();
         }
 
         return $message;

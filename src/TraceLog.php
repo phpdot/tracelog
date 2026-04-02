@@ -17,6 +17,7 @@ namespace PHPdot\TraceLog;
 
 use BackedEnum;
 use PHPdot\TraceLog\Bridge\TraceLogBridge;
+use PHPdot\TraceLog\Exception\SpanException;
 use PHPdot\TraceLog\Log\Channel\Channel;
 use PHPdot\TraceLog\Log\Channel\ChannelManager;
 use PHPdot\TraceLog\Log\LogLevel;
@@ -31,7 +32,6 @@ use PHPdot\TraceLog\Trace\SpanId;
 use PHPdot\TraceLog\Trace\TraceContext;
 use PHPdot\TraceLog\Trace\Traceparent;
 use PHPdot\TraceLog\Trace\TraceType;
-use RuntimeException;
 
 final class TraceLog
 {
@@ -142,7 +142,7 @@ final class TraceLog
      * Get the current active span.
      *
      *
-     * @throws RuntimeException If no active span
+     * @throws SpanException If no active span
      * @return ActiveSpan Current span wrapper
      */
     public function currentSpan(): ActiveSpan
@@ -150,7 +150,7 @@ final class TraceLog
         $span = $this->spanStack->current();
 
         if ($span === null) {
-            throw new RuntimeException('No active span');
+            throw SpanException::noActiveSpan();
         }
 
         return new ActiveSpan($span, $this);
@@ -160,7 +160,7 @@ final class TraceLog
      * Get the root span.
      *
      *
-     * @throws RuntimeException If no root span
+     * @throws SpanException If no root span
      * @return ActiveSpan Root span wrapper
      */
     public function rootSpan(): ActiveSpan
@@ -168,7 +168,7 @@ final class TraceLog
         $root = $this->spanStack->root();
 
         if ($root === null) {
-            throw new RuntimeException('No root span');
+            throw SpanException::noRootSpan();
         }
 
         return new ActiveSpan($root, $this);
@@ -230,7 +230,7 @@ final class TraceLog
      * Get the current span's traceparent for propagation.
      *
      *
-     * @throws RuntimeException If no active span
+     * @throws SpanException If no active span
      * @return Traceparent Current traceparent
      */
     public function getTraceparent(): Traceparent
@@ -238,7 +238,7 @@ final class TraceLog
         $current = $this->spanStack->current();
 
         if ($current === null) {
-            throw new RuntimeException('No active span');
+            throw SpanException::noActiveSpan();
         }
 
         return $current->getTraceparent();

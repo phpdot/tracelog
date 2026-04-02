@@ -21,22 +21,21 @@ final class NullHandlerTest extends TestCase
             'message' => 'This should be silently discarded',
         ]);
 
-        // No exception = pass
         self::assertTrue(true);
     }
 
     #[Test]
-    public function isHandlingReturnsFalseForAllLevels(): void
+    public function isHandlingReturnsTrueForAllLevels(): void
     {
         $handler = new NullHandler();
 
-        self::assertFalse($handler->isHandling(LogLevel::DEBUG));
-        self::assertFalse($handler->isHandling(LogLevel::INFO));
-        self::assertFalse($handler->isHandling(LogLevel::NOTICE));
-        self::assertFalse($handler->isHandling(LogLevel::WARNING));
-        self::assertFalse($handler->isHandling(LogLevel::ERROR));
-        self::assertFalse($handler->isHandling(LogLevel::CRITICAL));
-        self::assertFalse($handler->isHandling(LogLevel::ALERT));
-        self::assertFalse($handler->isHandling(LogLevel::EMERGENCY));
+        self::assertTrue($handler->isHandling(LogLevel::DEBUG));
+        self::assertTrue($handler->isHandling(LogLevel::INFO));
+        self::assertTrue($handler->isHandling(LogLevel::NOTICE));
+        self::assertTrue($handler->isHandling(LogLevel::WARNING));
+        self::assertTrue($handler->isHandling(LogLevel::ERROR));
+        self::assertTrue($handler->isHandling(LogLevel::CRITICAL));
+        self::assertTrue($handler->isHandling(LogLevel::ALERT));
+        self::assertTrue($handler->isHandling(LogLevel::EMERGENCY));
     }
 }

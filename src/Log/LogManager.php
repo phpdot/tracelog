@@ -198,6 +198,8 @@ final class LogManager implements LoggerInterface
     /**
      * Build and write a log record to the appropriate channel handler.
      *
+     * @internal Called by PendingLog. Use PSR-3 methods (info, error, etc.) instead.
+     *
      * @param int $level The integer log level
      * @param string $message The log message
      * @param array<mixed> $context Additional context data

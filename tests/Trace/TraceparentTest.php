@@ -4,11 +4,10 @@ declare(strict_types=1);
 
 namespace PHPdot\TraceLog\Tests\Trace;
 
-use InvalidArgumentException;
+use PHPdot\TraceLog\Exception\InvalidIdentifierException;
 use PHPdot\TraceLog\Trace\SpanId;
 use PHPdot\TraceLog\Trace\TraceId;
 use PHPdot\TraceLog\Trace\Traceparent;
-use PHPdot\TraceLog\Trace\TraceType;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -26,14 +25,14 @@ final class TraceparentTest extends TestCase
     #[Test]
     public function toHeaderProducesW3cFormat(): void
     {
-        $traceId = TraceId::generate(TraceType::HTTP);
+        $traceId = TraceId::generate();
         $spanId = SpanId::generate();
         $traceparent = new Traceparent($traceId->id(), $spanId->id());
 
         $header = $traceparent->toHeader();
 
         self::assertMatchesRegularExpression(
-            '/^00-[0-9a-f]{32}-[0-9a-zA-Z]{16}-01$/',
+            '/^00-[0-9a-f]{32}-[0-9a-f]{16}-01$/',
             $header,
         );
     }
@@ -42,7 +41,7 @@ final class TraceparentTest extends TestCase
     public function fromHeaderParsesValidW3cHeader(): void
     {
         $hex = str_repeat('a', 32);
-        $spanHex = str_pad('abc', 16, '0', STR_PAD_LEFT);
+        $spanHex = str_repeat('b', 16);
         $header = sprintf('00-%s-%s-01', $hex, $spanHex);
 
         $traceparent = Traceparent::fromHeader($header);
@@ -54,16 +53,16 @@ final class TraceparentTest extends TestCase
     #[Test]
     public function fromHeaderRoundtrip(): void
     {
-        $traceId = TraceId::generate(TraceType::HTTP);
+        $traceId = TraceId::generate();
         $spanId = SpanId::generate();
         $original = new Traceparent($traceId->id(), $spanId->id());
 
         $header = $original->toHeader();
         $restored = Traceparent::fromHeader($header);
 
-        // The trace ID is stored as UUID in fromHeader
         $restoredHex = str_replace('-', '', $restored->getTraceId());
         self::assertSame($traceId->id(), $restoredHex);
+        self::assertSame($spanId->id(), $restored->getSpanId());
     }
 
     #[Test]
@@ -80,7 +79,7 @@ final class TraceparentTest extends TestCase
     #[Test]
     public function invalidHeaderThrows(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InvalidIdentifierException::class);
 
         Traceparent::fromHeader('invalid-header');
     }
@@ -104,10 +103,22 @@ final class TraceparentTest extends TestCase
     #[Test]
     public function toStringReturnsHeader(): void
     {
-        $traceId = TraceId::generate(TraceType::HTTP);
+        $traceId = TraceId::generate();
         $spanId = SpanId::generate();
         $traceparent = new Traceparent($traceId->id(), $spanId->id());
 
         self::assertSame($traceparent->toHeader(), (string) $traceparent);
+    }
+
+    #[Test]
+    public function spanIdPreservedThroughHeaderRoundtrip(): void
+    {
+        $spanId = SpanId::generate();
+        $traceparent = new Traceparent(TraceId::generate()->id(), $spanId->id());
+
+        $header = $traceparent->toHeader();
+        $restored = Traceparent::fromHeader($header);
+
+        self::assertSame($spanId->id(), $restored->getSpanId());
     }
 }

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PHPdot\TraceLog\Tests\Trace;
 
-use InvalidArgumentException;
+use PHPdot\TraceLog\Exception\InvalidIdentifierException;
 use PHPdot\TraceLog\Trace\SpanId;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -64,7 +64,7 @@ final class SpanIdTest extends TestCase
     #[Test]
     public function fromStringRejectsInvalidFormat(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InvalidIdentifierException::class);
 
         SpanId::fromString('not-valid-hex');
     }
@@ -72,7 +72,7 @@ final class SpanIdTest extends TestCase
     #[Test]
     public function fromStringRejectsWrongLength(): void
     {
-        $this->expectException(InvalidArgumentException::class);
+        $this->expectException(InvalidIdentifierException::class);
 
         SpanId::fromString('abcdef');
     }

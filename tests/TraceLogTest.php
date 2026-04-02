@@ -12,7 +12,6 @@ use PHPdot\TraceLog\Span\SpanBuilder;
 use PHPdot\TraceLog\Trace\SpanId;
 use PHPdot\TraceLog\Trace\TraceId;
 use PHPdot\TraceLog\Trace\Traceparent;
-use PHPdot\TraceLog\Trace\TraceType;
 use PHPdot\TraceLog\TraceLog;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -138,7 +137,7 @@ final class TraceLogTest extends TestCase
     #[Test]
     public function fromTraceparentInheritsTrace(): void
     {
-        $parentTraceId = TraceId::generate(TraceType::HTTP);
+        $parentTraceId = TraceId::generate();
         $parentSpanId = SpanId::generate();
         $parent = new Traceparent($parentTraceId->id(), $parentSpanId->id());
 

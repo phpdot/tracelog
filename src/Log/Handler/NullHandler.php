@@ -28,10 +28,10 @@ final class NullHandler implements HandlerInterface
      *
      * @param int $level The log level to check
      *
-     * @return bool Always false — this handler processes nothing
+     * @return bool Always true — this handler accepts all levels and discards them
      */
     public function isHandling(int $level): bool
     {
-        return false;
+        return true;
     }
 }

@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace PHPdot\TraceLog\Trace;
 
-use InvalidArgumentException;
+use PHPdot\TraceLog\Exception\InvalidIdentifierException;
 
 final class TraceId
 {
@@ -48,7 +48,7 @@ final class TraceId
      *
      * @param string $id UUID (8-4-4-4-12) or 32-char hex string
      *
-     * @throws InvalidArgumentException If the format is invalid
+     * @throws InvalidIdentifierException If the format is invalid
      * @return self TraceId instance
      */
     public static function fromString(string $id): self
@@ -56,7 +56,7 @@ final class TraceId
         $hex = strtolower(str_replace('-', '', $id));
 
         if (strlen($hex) !== 32 || preg_match('/^[0-9a-f]{32}$/', $hex) !== 1) {
-            throw new InvalidArgumentException('Invalid trace ID format: expected 32 hex characters or UUID format');
+            throw InvalidIdentifierException::traceId($id);
         }
 
         $timestamp = (int) hexdec(substr($hex, 0, 12));

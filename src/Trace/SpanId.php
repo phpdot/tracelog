@@ -17,7 +17,7 @@ declare(strict_types=1);
 
 namespace PHPdot\TraceLog\Trace;
 
-use InvalidArgumentException;
+use PHPdot\TraceLog\Exception\InvalidIdentifierException;
 
 final class SpanId
 {
@@ -71,7 +71,7 @@ final class SpanId
      *
      * @param string $hex 16 hex characters
      *
-     * @throws InvalidArgumentException If format is invalid
+     * @throws InvalidIdentifierException If format is invalid
      * @return self SpanId instance
      */
     public static function fromString(string $hex): self
@@ -79,9 +79,7 @@ final class SpanId
         $hex = strtolower($hex);
 
         if (strlen($hex) !== 16 || preg_match('/^[0-9a-f]{16}$/', $hex) !== 1) {
-            throw new InvalidArgumentException(
-                sprintf('Invalid SpanId format: expected 16 hex characters, got "%s"', $hex),
-            );
+            throw InvalidIdentifierException::spanId($hex);
         }
 
         $timestamp = (int) hexdec(substr($hex, 0, 12));

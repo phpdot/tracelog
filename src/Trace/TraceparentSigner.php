@@ -15,19 +15,19 @@ declare(strict_types=1);
 
 namespace PHPdot\TraceLog\Trace;
 
-use RuntimeException;
+use PHPdot\TraceLog\Exception\SignerException;
 
 final class TraceparentSigner
 {
     /**
      * @param string $secret HMAC secret key (minimum 16 characters recommended)
-     * @throws RuntimeException If the secret is empty
+     * @throws SignerException If the secret is empty
      */
     public function __construct(
         private readonly string $secret,
     ) {
         if ($secret === '') {
-            throw new RuntimeException('Signer secret must not be empty.');
+            throw SignerException::emptySecret();
         }
     }
 

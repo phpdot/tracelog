@@ -5,9 +5,9 @@ declare(strict_types=1);
 /**
  * Trace Context
  *
- * Request-level context that holds the trace identifier, span identifier,
- * and trace type. Supports both new traces and inherited traces from
- * parent contexts for distributed tracing propagation.
+ * Request-level context that holds the trace identifier and trace type.
+ * Supports both new traces and inherited traces from parent contexts
+ * for distributed tracing propagation.
  *
  * @author Omar Hamdan <omar@phpdot.com>
  * @license MIT
@@ -18,7 +18,6 @@ namespace PHPdot\TraceLog\Trace;
 final class TraceContext
 {
     private readonly TraceId $traceId;
-    private readonly SpanId $spanId;
 
     /**
      * Create a new TraceContext.
@@ -35,8 +34,6 @@ final class TraceContext
         } else {
             $this->traceId = TraceId::generate();
         }
-
-        $this->spanId = SpanId::generate();
     }
 
     /**
@@ -75,16 +72,6 @@ final class TraceContext
     }
 
     /**
-     * Get the span identifier.
-     *
-     * @return SpanId The span ID object
-     */
-    public function getSpanId(): SpanId
-    {
-        return $this->spanId;
-    }
-
-    /**
      * Get the trace type.
      *
      * @return TraceType The trace type
@@ -92,16 +79,6 @@ final class TraceContext
     public function getType(): TraceType
     {
         return $this->type;
-    }
-
-    /**
-     * Get the traceparent for this context.
-     *
-     * @return Traceparent The traceparent containing this context's trace and span IDs
-     */
-    public function getTraceparent(): Traceparent
-    {
-        return new Traceparent($this->traceId->id(), $this->spanId->id());
     }
 
     /**

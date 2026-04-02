@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace PHPdot\TraceLog\Tests\Trace;
 
+use PHPdot\TraceLog\Exception\SignerException;
 use PHPdot\TraceLog\Trace\Traceparent;
 use PHPdot\TraceLog\Trace\TraceparentSigner;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
-use RuntimeException;
 
 final class TraceparentSignerTest extends TestCase
 {
@@ -103,7 +103,7 @@ final class TraceparentSignerTest extends TestCase
     #[Test]
     public function emptySecretThrows(): void
     {
-        $this->expectException(RuntimeException::class);
+        $this->expectException(SignerException::class);
         $this->expectExceptionMessage('must not be empty');
 
         new TraceparentSigner('');

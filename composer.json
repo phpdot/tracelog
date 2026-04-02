@@ -1,0 +1,52 @@
+{
+    "name": "phpdot/tracelog",
+    "description": "Distributed tracing, structured logging, and secure log encryption for PHP.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Omar Hamdan",
+            "email": "omar@phpdot.com"
+        }
+    ],
+    "keywords": ["tracing", "logging", "observability", "psr-3", "encryption", "spans", "w3c-trace-context"],
+    "require": {
+        "php": ">=8.3",
+        "ext-openssl": "*",
+        "ext-zlib": "*",
+        "psr/log": "^3.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^11.0",
+        "phpstan/phpstan": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "friendsofphp/php-cs-fixer": "^3.94"
+    },
+    "suggest": {
+        "monolog/monolog": "Use Monolog handlers (Slack, Syslog, etc.) via adapter"
+    },
+    "autoload": {
+        "psr-4": {
+            "PHPdot\\TraceLog\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PHPdot\\TraceLog\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "analyse": "phpstan analyse --memory-limit=256M",
+        "cs-fix": "php-cs-fixer fix",
+        "cs-check": "php-cs-fixer fix --dry-run --diff",
+        "check": [
+            "@test",
+            "@analyse",
+            "@cs-check"
+        ]
+    },
+    "config": {
+        "sort-packages": true
+    }
+}

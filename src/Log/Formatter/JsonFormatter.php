@@ -56,6 +56,13 @@ final class JsonFormatter implements FormatterInterface
 
         $output['context'] = $context;
 
-        return json_encode($output, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . "\n";
+        // Never throw from the logging path: substitute malformed UTF-8 and tolerate partial
+        // output so an un-encodable context value cannot crash the application.
+        $json = json_encode(
+            $output,
+            JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR,
+        );
+
+        return ($json !== false ? $json : '{"level_name":"ERROR","message":"log record could not be encoded"}') . "\n";
     }
 }

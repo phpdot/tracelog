@@ -17,9 +17,12 @@ namespace PHPdot\TraceLog;
 
 use BackedEnum;
 use PHPdot\TraceLog\Bridge\TraceLogBridge;
+use PHPdot\TraceLog\Encryption\ChaChaEncryptor;
 use PHPdot\TraceLog\Exception\SpanException;
 use PHPdot\TraceLog\Log\Channel\Channel;
 use PHPdot\TraceLog\Log\Channel\ChannelManager;
+use PHPdot\TraceLog\Log\Formatter\JsonFormatter;
+use PHPdot\TraceLog\Log\Formatter\TextFormatter;
 use PHPdot\TraceLog\Log\LogLevel;
 use PHPdot\TraceLog\Log\LogManager;
 use PHPdot\TraceLog\Log\PendingLog;
@@ -101,14 +104,22 @@ final class TraceLog
      */
     public static function create(TraceLogConfig $config): self
     {
+        $encryptor = $config->encryptionKey !== null
+            ? new ChaChaEncryptor($config->encryptionKey)
+            : null;
+
+        $formatter = $config->defaultFormatter === 'text'
+            ? new TextFormatter()
+            : new JsonFormatter();
+
         $channelManager = new ChannelManager(
             $config->logPath,
-            null,
+            $formatter,
             LogLevel::fromPsr($config->logLevel),
             $config->maxChannels,
         );
 
-        $logManager = new LogManager($channelManager, null, $config->defaultChannel);
+        $logManager = new LogManager($channelManager, $encryptor, $config->defaultChannel);
 
         return new self(
             $logManager,

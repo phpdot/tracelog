@@ -149,4 +149,17 @@ final class ChaChaEncryptorTest extends TestCase
         $this->expectException(EncryptionException::class);
         $encryptor2->decrypt($ciphertext);
     }
+
+    #[Test]
+    public function ciphertextLengthDoesNotRevealCompressibility(): void
+    {
+        $encryptor = new ChaChaEncryptor(ChaChaEncryptor::generateKey());
+
+        // No pre-encryption compression (CRIME/BREACH): a highly compressible plaintext and an
+        // incompressible one of the same length must produce equal-length ciphertext.
+        $compressible = (string) base64_decode($encryptor->encrypt(str_repeat('A', 4096)), true);
+        $incompressible = (string) base64_decode($encryptor->encrypt(random_bytes(4096)), true);
+
+        self::assertSame(strlen($incompressible), strlen($compressible));
+    }
 }

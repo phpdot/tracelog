@@ -15,6 +15,7 @@ declare(strict_types=1);
 namespace PHPdot\TraceLog\Log;
 
 use PHPdot\TraceLog\Encryption\EncryptorInterface;
+use PHPdot\TraceLog\Exception\EncryptionException;
 
 final class PendingLog
 {
@@ -38,7 +39,12 @@ final class PendingLog
     ) {}
 
     /**
-     * Encrypt the message and write the log immediately.
+     * Encrypt the message and context, then write the log immediately.
+     *
+     * Fails closed: throws (and writes nothing) if no encryptor is configured or encryption
+     * fails — the sensitive payload is never written in plaintext.
+     *
+     * @throws EncryptionException If no encryptor is configured or encryption fails
      */
     public function secure(): void
     {
@@ -46,17 +52,29 @@ final class PendingLog
             return;
         }
 
+        // Mark consumed up front: if encryption is unavailable or fails, the log is DROPPED —
+        // it must never fall through to a plaintext write (including the __destruct fallback).
         $this->written = true;
 
-        $message = $this->message;
-        $context = $this->context;
-
-        if ($this->encryptor !== null) {
-            $message = $this->encryptor->encrypt($this->message);
-            $context['encrypted'] = true;
+        // Fail closed: secure() refuses to write the sensitive payload without encryption.
+        if ($this->encryptor === null) {
+            throw EncryptionException::secureWithoutEncryptor();
         }
 
-        $this->logger->writeRecord($this->level, $message, $context);
+        // Encrypt the message AND the user context together — context is where structured
+        // logging puts the actual secrets. Encrypt before writing, so a failure writes nothing.
+        try {
+            $payload = json_encode(
+                ['message' => $this->message, 'context' => $this->context],
+                JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE,
+            );
+        } catch (\JsonException) {
+            throw EncryptionException::securePayloadNotEncodable();
+        }
+
+        $ciphertext = $this->encryptor->encrypt($payload);
+
+        $this->logger->writeRecord($this->level, $ciphertext, ['encrypted' => true]);
     }
 
     /**
@@ -78,6 +96,11 @@ final class PendingLog
 
         $this->written = true;
 
-        $this->logger->writeRecord($this->level, $this->message, $this->context);
+        // Implicit (destructor) write must NEVER throw — a throw from __destruct is a fatal error.
+        try {
+            $this->logger->writeRecord($this->level, $this->message, $this->context);
+        } catch (\Throwable) {
+            // Best-effort: a normal log is dropped rather than crashing the application.
+        }
     }
 }

@@ -54,9 +54,13 @@ final class StreamHandler implements HandlerInterface
             @mkdir($directory, 0o755, true);
         }
 
-        $formatted = $this->formatter->format($record);
-
-        @file_put_contents($this->path, $formatted, FILE_APPEND | LOCK_EX);
+        // Logging must never crash the application: a formatter throw or write failure is dropped.
+        try {
+            $formatted = $this->formatter->format($record);
+            @file_put_contents($this->path, $formatted, FILE_APPEND | LOCK_EX);
+        } catch (\Throwable) {
+            // Intentionally swallowed — see class docblock.
+        }
     }
 
     /**

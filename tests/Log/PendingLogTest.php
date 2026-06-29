@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PHPdot\TraceLog\Tests\Log;
 
 use PHPdot\TraceLog\Encryption\ChaChaEncryptor;
+use PHPdot\TraceLog\Exception\EncryptionException;
 use PHPdot\TraceLog\Log\Channel\ChannelManager;
 use PHPdot\TraceLog\Log\LogLevel;
 use PHPdot\TraceLog\Log\LogManager;
@@ -81,9 +82,11 @@ final class PendingLogTest extends TestCase
     #[Test]
     public function doubleWritePrevention(): void
     {
-        $manager = $this->createManager();
+        $encryptor = new ChaChaEncryptor(ChaChaEncryptor::generateKey());
+        $channelManager = new ChannelManager($this->tmpDir, null, LogLevel::DEBUG);
+        $manager = new LogManager($channelManager, $encryptor);
 
-        $pending = new PendingLog($manager, LogLevel::INFO, 'Only once');
+        $pending = new PendingLog($manager, LogLevel::INFO, 'Only once', [], $encryptor);
         $pending->secure();
         // Destruct should not write again
         unset($pending);
@@ -95,5 +98,64 @@ final class PendingLogTest extends TestCase
         // Count occurrences of the message — should appear exactly once
         $lines = array_filter(explode("\n", trim($content)));
         self::assertCount(1, $lines);
+    }
+
+    #[Test]
+    public function secureWithoutEncryptorThrowsAndWritesNothing(): void
+    {
+        $manager = $this->createManager(); // no encryptor configured
+
+        $pending = new PendingLog($manager, LogLevel::INFO, 'SSN 123-45-6789');
+
+        $threw = false;
+        try {
+            $pending->secure();
+        } catch (EncryptionException) {
+            $threw = true;
+        }
+        self::assertTrue($threw, 'secure() must throw when no encryptor is configured');
+
+        // Fail closed: nothing written, and certainly no plaintext — even after destruct.
+        unset($pending);
+
+        $logFile = $this->tmpDir . '/app.log';
+        $content = is_file($logFile) ? (string) file_get_contents($logFile) : '';
+        self::assertStringNotContainsString('123-45-6789', $content);
+    }
+
+    #[Test]
+    public function secureEncryptsMessageAndContextAndRoundtrips(): void
+    {
+        $encryptor = new ChaChaEncryptor(ChaChaEncryptor::generateKey());
+        $channelManager = new ChannelManager($this->tmpDir, null, LogLevel::DEBUG);
+        $manager = new LogManager($channelManager, $encryptor);
+
+        $pending = new PendingLog(
+            $manager,
+            LogLevel::INFO,
+            'Password reset',
+            ['email' => 'victim@example.com', 'token' => 'SECRET-TOKEN-123'],
+            $encryptor,
+        );
+        $pending->secure();
+
+        $content = (string) file_get_contents($this->tmpDir . '/app.log');
+
+        // Neither the message nor any context secret appears in plaintext.
+        self::assertStringNotContainsString('Password reset', $content);
+        self::assertStringNotContainsString('victim@example.com', $content);
+        self::assertStringNotContainsString('SECRET-TOKEN-123', $content);
+
+        // The encrypted payload round-trips back to message + context.
+        $record = json_decode(trim($content), true);
+        self::assertIsArray($record);
+        self::assertTrue($record['context']['encrypted'] ?? null);
+        self::assertIsString($record['message']);
+
+        $decrypted = json_decode($encryptor->decrypt($record['message']), true);
+        self::assertIsArray($decrypted);
+        self::assertSame('Password reset', $decrypted['message']);
+        self::assertSame('victim@example.com', $decrypted['context']['email']);
+        self::assertSame('SECRET-TOKEN-123', $decrypted['context']['token']);
     }
 }

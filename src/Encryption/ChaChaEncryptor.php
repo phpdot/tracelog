@@ -5,8 +5,8 @@ declare(strict_types=1);
 /**
  * ChaCha20-Poly1305 Encryptor
  *
- * Authenticated encryption with compression using ChaCha20-Poly1305.
- * Compress, encrypt, and base64-encode for safe transport and storage.
+ * Authenticated encryption using ChaCha20-Poly1305: encrypt and base64-encode for safe
+ * transport and storage. No pre-encryption compression (avoids CRIME/BREACH-class length leaks).
  *
  * @author Omar Hamdan <omar@phpdot.com>
  * @license MIT
@@ -54,27 +54,20 @@ final class ChaChaEncryptor implements EncryptorInterface
     }
 
     /**
-     * Encrypt a plaintext string (compress, encrypt, base64-encode).
+     * Encrypt a plaintext string (encrypt, base64-encode).
      *
      * @param string $plaintext The plaintext to encrypt
      *
-     *
-     * @throws EncryptionException If compression or encryption fails
+     * @throws EncryptionException If encryption fails
      * @return string Base64-encoded ciphertext
      */
     public function encrypt(string $plaintext): string
     {
-        $compressed = gzcompress($plaintext, 9);
-
-        if ($compressed === false) {
-            throw EncryptionException::compressionFailed();
-        }
-
         $nonce = random_bytes(self::NONCE_LEN);
         $tag   = '';
 
         $ciphertext = openssl_encrypt(
-            $compressed,
+            $plaintext,
             self::CIPHER,
             $this->key,
             OPENSSL_RAW_DATA,
@@ -92,12 +85,11 @@ final class ChaChaEncryptor implements EncryptorInterface
     }
 
     /**
-     * Decrypt a ciphertext string (base64-decode, decrypt, decompress).
+     * Decrypt a ciphertext string (base64-decode, decrypt).
      *
      * @param string $ciphertext Base64-encoded ciphertext
      *
-     *
-     * @throws EncryptionException If decoding, decryption, or decompression fails
+     * @throws EncryptionException If decoding or decryption fails
      * @return string The decrypted plaintext
      */
     public function decrypt(string $ciphertext): string
@@ -114,7 +106,7 @@ final class ChaChaEncryptor implements EncryptorInterface
         $tag        = substr($payload, self::NONCE_LEN, self::TAG_LEN);
         $encrypted  = substr($payload, $minLength);
 
-        $compressed = openssl_decrypt(
+        $message = openssl_decrypt(
             $encrypted,
             self::CIPHER,
             $this->key,
@@ -123,14 +115,8 @@ final class ChaChaEncryptor implements EncryptorInterface
             $tag,
         );
 
-        if ($compressed === false) {
-            throw EncryptionException::decryptionFailed();
-        }
-
-        $message = gzuncompress($compressed);
-
         if ($message === false) {
-            throw EncryptionException::decompressionFailed();
+            throw EncryptionException::decryptionFailed();
         }
 
         return $message;

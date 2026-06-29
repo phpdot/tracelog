@@ -26,16 +26,6 @@ final class EncryptionException extends TraceLogException
     }
 
     /**
-     * Create for a compression failure.
-     *
-     * @return self Exception instance
-     */
-    public static function compressionFailed(): self
-    {
-        return new self('Compression failed');
-    }
-
-    /**
      * Create for an encryption failure.
      *
      * @return self Exception instance
@@ -66,12 +56,24 @@ final class EncryptionException extends TraceLogException
     }
 
     /**
-     * Create for a decompression failure.
+     * Create when secure() is called but no encryptor is configured.
      *
      * @return self Exception instance
      */
-    public static function decompressionFailed(): self
+    public static function secureWithoutEncryptor(): self
     {
-        return new self('Decompression failed');
+        return new self('Cannot encrypt: secure() was called but no encryptor is configured');
+    }
+
+    /**
+     * Create when the secure payload cannot be serialized for encryption.
+     *
+     * Carries no plaintext — the unencodable value must never leak into a message or trace.
+     *
+     * @return self Exception instance
+     */
+    public static function securePayloadNotEncodable(): self
+    {
+        return new self('Cannot encrypt: the log message or context could not be serialized');
     }
 }

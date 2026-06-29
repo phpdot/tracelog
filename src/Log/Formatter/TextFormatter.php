@@ -41,7 +41,10 @@ final class TextFormatter implements FormatterInterface
 
         /** @var array<mixed> $context */
         $context = is_array($record['context'] ?? null) ? $record['context'] : [];
-        $contextJson = $context !== [] ? json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) : '{}';
+        $encoded = $context !== []
+            ? json_encode($context, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR)
+            : '{}';
+        $contextJson = is_string($encoded) ? $encoded : '{}';
 
         $traceId = $this->extractString($record, 'trace_id');
         $spanId  = $this->extractString($record, 'span_id');

@@ -219,17 +219,19 @@ $tracelog->info('User logged in');                    // plaintext
 $tracelog->info('Password reset for user@x.com')->secure();  // encrypted
 ```
 
-Trace fields (trace_id, span_id, channel) stay in plaintext for queryability. Only the message is encrypted.
+Trace fields (trace_id, span_id, channel) stay in plaintext for queryability. The message **and your
+context** are encrypted together — context is where structured logging usually holds the actual secrets.
 
 ---
 
 ## Error Handling
 
-TraceLog never crashes the application.
+Normal logging never crashes the application.
 
 - File write fails → silently skipped
-- Logger creation fails → NullHandler used
-- Encryption fails → written unencrypted
+- Formatter/encode error (e.g. non-UTF-8 context) → substituted, never thrown
+- `secure()` with no key, or an encryption failure → **throws and writes nothing** (fail-closed: the
+  entry is never written in plaintext)
 - Only programmer/config errors throw (invalid key, invalid trace ID format)
 
 ---

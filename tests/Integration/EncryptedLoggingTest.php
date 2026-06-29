@@ -75,11 +75,13 @@ final class EncryptedLoggingTest extends TestCase
         self::assertNotNull($encryptedLine, 'Expected to find an encrypted log entry');
         self::assertIsString($encryptedLine['message']);
 
-        // Decrypt the message field
-        $decrypted = $encryptor->decrypt($encryptedLine['message']);
+        // Decrypt the message field — secure() now encrypts a {message, context} envelope so the
+        // user's context (where the real secrets usually live) is protected too, not just the message.
+        $payload = json_decode($encryptor->decrypt($encryptedLine['message']), true);
+        self::assertIsArray($payload);
 
-        // Verify original message recovered
-        self::assertSame($originalMessage, $decrypted);
+        // Verify original message recovered from the encrypted envelope
+        self::assertSame($originalMessage, $payload['message']);
 
         $traceLog->shutdown();
     }

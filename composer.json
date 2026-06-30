@@ -1,6 +1,6 @@
 {
     "name": "phpdot/tracelog",
-    "description": "Distributed tracing, structured logging, and secure log encryption for PHP.",
+    "description": "The rich, encrypted, file-based writer backend for the PHPdot observability engine.",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -11,8 +11,10 @@
     ],
     "keywords": ["tracing", "logging", "observability", "psr-3", "encryption", "spans", "w3c-trace-context"],
     "require": {
-        "php": ">=8.3",
+        "php": ">=8.4",
         "ext-openssl": "*",
+        "phpdot/container": "^1.8",
+        "phpdot/contracts": "^1.9",
         "psr/log": "^3.0"
     },
     "require-dev": {

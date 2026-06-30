@@ -14,7 +14,6 @@ declare(strict_types=1);
 
 namespace PHPdot\TraceLog\Log\Channel;
 
-use BackedEnum;
 use PHPdot\TraceLog\Log\Formatter\FormatterInterface;
 use PHPdot\TraceLog\Log\Formatter\JsonFormatter;
 use PHPdot\TraceLog\Log\Handler\HandlerInterface;
@@ -57,13 +56,13 @@ final class ChannelManager
      * If the maximum number of cached handlers is reached, the least-recently-used
      * handler is evicted before creating a new one.
      *
-     * @param BackedEnum $channel The channel to get a handler for
+     * @param string $channel The channel name to get a handler for
      *
      * @return HandlerInterface The handler for the channel
      */
-    public function getHandler(BackedEnum $channel): HandlerInterface
+    public function getHandler(string $channel): HandlerInterface
     {
-        $key = (string) $channel->value;
+        $key = $channel;
 
         if (isset($this->handlers[$key])) {
             $this->lastUsed[$key] = time();

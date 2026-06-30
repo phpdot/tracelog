@@ -14,7 +14,7 @@
         "php": ">=8.4",
         "ext-openssl": "*",
         "phpdot/container": "^1.8",
-        "phpdot/contracts": "^1.9",
+        "phpdot/contracts": "^1.11",
         "psr/log": "^3.0"
     },
     "require-dev": {

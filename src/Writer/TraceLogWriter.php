@@ -37,8 +37,8 @@ namespace PHPdot\TraceLog\Writer;
 
 use DateTimeImmutable;
 use PHPdot\Container\Attribute\Singleton;
+use PHPdot\Contracts\Logs\EncryptorInterface;
 use PHPdot\Contracts\Logs\WriterInterface;
-use PHPdot\TraceLog\Encryption\EncryptorInterface;
 use PHPdot\TraceLog\Log\Channel\ChannelManager;
 use PHPdot\TraceLog\Log\LogLevel;
 use Throwable;

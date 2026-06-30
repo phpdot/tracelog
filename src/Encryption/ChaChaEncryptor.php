@@ -14,6 +14,7 @@ declare(strict_types=1);
 
 namespace PHPdot\TraceLog\Encryption;
 
+use PHPdot\Contracts\Logs\EncryptorInterface;
 use PHPdot\TraceLog\Exception\EncryptionException;
 
 final class ChaChaEncryptor implements EncryptorInterface

@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace PHPdot\TraceLog\Tests\Writer;
 
-use PHPdot\TraceLog\Encryption\EncryptorInterface;
+use PHPdot\Contracts\Logs\EncryptorInterface;
 use PHPdot\TraceLog\Log\Channel\ChannelManager;
 use PHPdot\TraceLog\Writer\TraceLogWriter;
 use PHPUnit\Framework\Attributes\Test;
